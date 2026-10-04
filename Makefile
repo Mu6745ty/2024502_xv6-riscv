@@ -150,9 +150,12 @@ UPROGS=\
 	$U/_forphan\
 	$U/_dorphan\
 	$U/_sync\
+	$U/_sleep\
+	$U/_sixfive\
+	$U/_memdump\
 
-fs.img: mkfs/mkfs README $(UPROGS)
-	mkfs/mkfs fs.img README $(UPROGS)
+fs.img: mkfs/mkfs README $(UPROGS) user/sixfive.txt
+	mkfs/mkfs fs.img README $(UPROGS) user/sixfive.txt
 
 -include kernel/*.d user/*.d
 
