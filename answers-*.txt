@@ -1,0 +1,18 @@
+1. `usertrap()` called `syscall()`.
+
+2. `p->trapframe->a7` was `5`, which corresponds to `SYS_read` in `kernel/syscall.h`. Register `a7` holds the system call number.
+
+3. The previous CPU mode was **user mode** because the SPP bit in `$sstatus` was `0`.
+
+4. The panic output was:
+   - `scause = 0xd`
+   - `sepc = 0x80002854`
+   - `stval = 0x0`
+
+5. The faulting assembly instruction was `lw a3,0(zero)`. Register `a3` corresponds to the C variable `num`.
+
+6. I set a GDB breakpoint at `0x80002854`, the faulting instruction address, and confirmed the program counter reached that address.
+
+7. The kernel crashed because it attempted to load an integer from address `0`, which is not mapped in the kernel address space. `scause = 0xd` indicates a load page fault, and `stval = 0x0` identifies the faulting address.
+
+8. The process running when the kernel panicked was `init`, with PID `1`.
