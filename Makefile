@@ -129,6 +129,8 @@ mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
 # http://www.gnu.org/software/make/manual/html_node/Chained-Rules.html
 .PRECIOUS: %.o
 
+UEXTRA += user/findtest.sh
+
 UPROGS=\
 	$U/_cat\
 	$U/_echo\
@@ -155,8 +157,8 @@ UPROGS=\
 	$U/_memdump\
 	$U/_find\
 
-fs.img: mkfs/mkfs README $(UPROGS) user/sixfive.txt
-	mkfs/mkfs fs.img README $(UPROGS) user/sixfive.txt
+fs.img: mkfs/mkfs README $(UPROGS) user/sixfive.txt $(UEXTRA)
+	mkfs/mkfs fs.img README $(UPROGS) user/sixfive.txt $(UEXTRA)
 
 -include kernel/*.d user/*.d
 
