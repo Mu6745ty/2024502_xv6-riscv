@@ -158,6 +158,7 @@ UPROGS=\
 	$U/_find\
 	$U/_attack\
 	$U/_secret\
+	$U/_sandbox\
 
 fs.img: mkfs/mkfs README $(UPROGS) user/sixfive.txt $(UEXTRA)
 	mkfs/mkfs fs.img README $(UPROGS) user/sixfive.txt $(UEXTRA)
