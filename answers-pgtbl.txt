@@ -123,10 +123,12 @@ physical addresses are 2 MB-aligned and at least 2 MB is left.
 Otherwise it maps normal 4 KB pages. User page tables still use the
 original mappages, so user processes only get 4 KB pages.
 
-Superpage PTEs used: <your number>
-  - PLIC region: <number>
-  - kernel data / RAM region: <number>
+Superpage PTEs used: 95
+  - PLIC region: 32 (64 MB / 2 MB)
+  - kernel data / RAM region:  63 (from 0x80200000 to PHYSTOP,
+    126 MB / 2 MB)
 
-Bottom-level pages saved: <your number> x 512 = <result>.
+
+Bottom-level pages saved: 95 x 512 = 48,640.
 Each superpage replaces 512 bottom-level pages, so we also need
 fewer page-table pages and fewer TLB entries.
