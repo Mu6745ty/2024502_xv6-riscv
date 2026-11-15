@@ -182,7 +182,7 @@ vmprint_level(pagetable_t pagetable, int level, uint64 va_base)
 void
 vmprint(pagetable_t pagetable)
 {
-  printk("Page table %p\n", pagetable);
+  printk("page table %p\n", pagetable);
   vmprint_level(pagetable, 2, 0);
 }
 #endif
