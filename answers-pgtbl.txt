@@ -48,3 +48,45 @@ va 0x3FFFFFF000, perm 0x4B (V R X A, no U)
 
 Note: The physical addresses (pa) are not in order. xv6 does not put
 consecutive virtual pages next to each other in physical memory.
+
+Part 2: vmprint
+===============
+
+vmprint walks the page table tree and prints every valid entry. The
+top and middle entries point to lower tables. Only the bottom entries
+(leaf pages) point to real memory, and these show the permissions.
+
+Leaf pages in the output:
+
+va 0x0 (RXU) and va 0x1000 (RXU)
+  Program text (code). The user can read and execute it but cannot
+  write it. These are the same pages as va 0x0 and 0x1000 in
+  print_pgtbl, with the same physical addresses.
+
+va 0x2000 (RWU)
+  Data page. The user can read and write it, but cannot execute it.
+
+va 0x3000 (RW, no U)
+  Guard page below the stack. User code cannot access it, so a stack
+  overflow causes a fault instead of damaging other memory.
+
+va 0x4000 (RWU)
+  User stack. The user can read and write it.
+
+va 0x3fffffe000 (RW, no U)
+  Trapframe. The kernel saves the user registers here during a trap.
+  Only the kernel can use it.
+
+va 0x3ffffff000 (RX, no U)
+  Trampoline. This is the code that switches between user mode and
+  kernel mode. It is executable but not usable directly by the user.
+
+How it relates to print_pgtbl: both show the same pages with the same
+physical addresses. print_pgtbl showed the raw permission number (for
+example 0x5B), while vmprint shows letters (RXU) and skips the empty
+pages. vmprint does not print the A and D bits.
+
+The top level has only two entries (0 and 255) because the process
+uses only the low addresses (code, data, stack) and the very top
+(trapframe and trampoline). Everything in between is not mapped, so
+no lower tables are needed for it.
