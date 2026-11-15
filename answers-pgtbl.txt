@@ -113,3 +113,20 @@ Which other system calls could use this page?
 These calls only return kernel data and change nothing, so reading a
 shared read-only value is enough. The kernel must keep the value up to
 date, and the page must never be writable by the user.
+
+Part 5: Superpages
+==================
+
+I made a copy of mappages called kmappages that only kvmmap uses. It
+uses a 2 MB superpage (one level-1 leaf PTE) when the virtual and
+physical addresses are 2 MB-aligned and at least 2 MB is left.
+Otherwise it maps normal 4 KB pages. User page tables still use the
+original mappages, so user processes only get 4 KB pages.
+
+Superpage PTEs used: <your number>
+  - PLIC region: <number>
+  - kernel data / RAM region: <number>
+
+Bottom-level pages saved: <your number> x 512 = <result>.
+Each superpage replaces 512 bottom-level pages, so we also need
+fewer page-table pages and fewer TLB entries.
