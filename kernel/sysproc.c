@@ -128,3 +128,17 @@ sys_interpose(void)
 
     return 0;
 }
+
+uint64
+sys_getnproc(void)
+{
+    return getnproc();
+}
+
+uint64
+sys_double(void)
+{
+  int x;
+  argint(0, &x);
+  return x;
+}

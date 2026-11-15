@@ -29,6 +29,8 @@ struct spinlock wait_lock;
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
+
+
 void
 proc_mapstacks(pagetable_t kpgtbl)
 {
@@ -700,4 +702,19 @@ procdump(void)
     printk("%d %s %s", p->pid, state, p->name);
     printk("\n");
   }
+}
+
+int getnproc(void){
+  int count = 0;
+  struct proc *p;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+
+    if(p->state == RUNNABLE)
+        count++;
+
+      release(&p->lock);
+  }
+  return count;
 }
