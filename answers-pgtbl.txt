@@ -90,3 +90,26 @@ The top level has only two entries (0 and 255) because the process
 uses only the low addresses (code, data, stack) and the very top
 (trapframe and trampoline). Everything in between is not mapped, so
 no lower tables are needed for it.
+
+Part 4: Speed up getpid
+=======================
+
+I allocate one page for each process and map it at USYSCALL with
+PTE_R and PTE_U (no PTE_W). The kernel stores the pid at the start of
+the page. User code can read it directly, so ugetpid() needs no trap
+into the kernel.
+
+The page is allocated in allocproc, mapped in proc_pagetable,
+unmapped in proc_freepagetable and freed in freeproc, the same way as
+the trapframe.
+
+Which other system calls could use this page?
+  - uptime(): the kernel could write the current tick count into a
+    shared read-only page each time the timer interrupt fires. The
+    user would just read it.
+  - sbrk(0): the kernel could keep the process size (p->sz) in the
+    shared page and update it whenever the size changes. Asking for the
+    current size would then only need a read.
+These calls only return kernel data and change nothing, so reading a
+shared read-only value is enough. The kernel must keep the value up to
+date, and the page must never be writable by the user.

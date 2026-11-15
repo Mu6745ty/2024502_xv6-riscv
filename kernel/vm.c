@@ -170,6 +170,7 @@ vmprint_level(pagetable_t pagetable, int level, uint64 va_base)
       if(pte & PTE_W) printk("W");
       if(pte & PTE_X) printk("X");
       if(pte & PTE_U) printk("U");
+      if(level == 1) printk(" Super");
     }
     printk("\n");
 
@@ -186,6 +187,68 @@ vmprint(pagetable_t pagetable)
 }
 #endif
 
+#ifdef LAB_PGTBL
+
+// Like walk(), but stops at level 1 and creates the top-level table if
+// needed. Returns the level-1 PTE for va, or 0 if kalloc fails.
+static pte_t *
+walk_l1(pagetable_t pagetable, uint64 va)
+{
+  pte_t *pte = &pagetable[PX(2, va)];
+  if (*pte & PTE_V) {
+    pagetable = (pagetable_t)PTE2PA(*pte);
+  } else {
+    if ((pagetable = (pagetable_t)kalloc()) == 0)
+      return 0;
+    memset(pagetable, 0, PGSIZE);
+    *pte = PA2PTE(pagetable) | PTE_V;
+  }
+  return &pagetable[PX(1, va)];
+}
+
+// Copy of mappages for the kernel page table only. Uses a 2 MB superpage
+// when va and pa are both 2 MB-aligned and at least 2 MB is left.
+// Otherwise it maps a normal 4 KB page.
+static int
+kmappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
+{
+  uint64 a, end;
+  pte_t *pte;
+
+  if ((va % PGSIZE) != 0)
+    panic("kmappages: va not aligned");
+  if ((size % PGSIZE) != 0)
+    panic("kmappages: size not aligned");
+  if (size == 0)
+    panic("kmappages: size");
+
+  a = va;
+  end = va + size;
+  while (a < end) {
+    if ((a % SUPERPGSIZE) == 0 && (pa % SUPERPGSIZE) == 0 &&
+        end - a >= SUPERPGSIZE) {
+      // one level-1 leaf PTE covers 2 MB
+      if ((pte = walk_l1(pagetable, a)) == 0)
+        return -1;
+      if (*pte & PTE_V)
+        panic("kmappages: remap");
+      *pte = PA2PTE(pa) | perm | PTE_V;
+      a += SUPERPGSIZE;
+      pa += SUPERPGSIZE;
+    } else {
+      // normal 4 KB page
+      if ((pte = walk(pagetable, a, 1)) == 0)
+        return -1;
+      if (*pte & PTE_V)
+        panic("kmappages: remap");
+      *pte = PA2PTE(pa) | perm | PTE_V;
+      a += PGSIZE;
+      pa += PGSIZE;
+    }
+  }
+  return 0;
+}
+#endif
 
 // add a mapping to the kernel page table.
 // only used when booting.
@@ -193,8 +256,13 @@ vmprint(pagetable_t pagetable)
 void
 kvmmap(pagetable_t kpgtbl, uint64 va, uint64 pa, uint64 sz, int perm)
 {
+#ifdef LAB_PGTBL
+  if (kmappages(kpgtbl, va, sz, pa, perm) != 0)
+    panic("kvmmap");
+#else
   if (mappages(kpgtbl, va, sz, pa, perm) != 0)
     panic("kvmmap");
+#endif
 }
 
 // Create PTEs for virtual addresses starting at va that refer to
