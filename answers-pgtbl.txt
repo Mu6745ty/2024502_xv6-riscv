@@ -1,0 +1,50 @@
+Part 1: Inspect a user-process page table
+==========================================
+
+A page table entry (PTE) tells the CPU where a virtual page is in
+physical memory and what the process is allowed to do with it.
+
+Permission bits: V = valid, R = read, W = write, X = execute,
+U = user can access, A = accessed, D = dirty (page was written to).
+
+va 0x0, perm 0x5B (V R X U A)
+  This is program text (the code). The user can read and execute it,
+  but cannot write to it. The A bit is set because the CPU has
+  already run instructions from this page.
+
+va 0x1000, perm 0x1B (V R X U)
+  This is more program text. The program is bigger than one page.
+  The A bit is not set because this page has not been used yet.
+
+va 0x2000, perm 0x17 (V R W U)
+  This is the data page (global variables). The user can read and
+  write it, but cannot execute it.
+
+va 0x3000, perm 0x7 (V R W, no U)
+  This is the guard page below the stack. The U bit is off, so user
+  code cannot use it. If the stack grows too far, the program touches
+  this page and gets a fault instead of silently damaging other data.
+
+va 0x4000, perm 0xD7 (V R W U A D)
+  This is the user stack. The user can read and write it. The A and D
+  bits are set because the program has already used and changed it.
+
+va 0x5000 to 0x9000, pte 0x0
+  These pages are not mapped. Nothing is stored there (the heap has
+  not grown yet). Using them would cause a page fault.
+
+va 0x3FFFFF6000 to 0x3FFFFFD000, pte 0x0
+  These pages are also not mapped. They are empty space below the
+  trapframe.
+
+va 0x3FFFFFE000, perm 0xC7 (V R W A D, no U)
+  This is the trapframe. The kernel saves the user registers here when
+  a trap happens. The U bit is off, so only the kernel can use it.
+
+va 0x3FFFFFF000, perm 0x4B (V R X A, no U)
+  This is the trampoline. It holds the code that switches between user
+  mode and kernel mode. The U bit is off, so user code cannot use this
+  page directly. It is mapped at the top of every address space.
+
+Note: The physical addresses (pa) are not in order. xv6 does not put
+consecutive virtual pages next to each other in physical memory.
