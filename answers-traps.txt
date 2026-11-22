@@ -12,11 +12,12 @@ Lab: traps (RISC-V assembly) - answers
    constant 12 into a1 (li a1,12). g was inlined into f, and f into main.
 
 3. At what address is the function printf located?
-   <ADDR>
+   0x76e (the line "000000000000076e <printf>:" in user/call.asm)
 
 4. What value is in the register ra just after the jalr to printf in main?
-   <RA> - the address of the instruction right after the jalr (the
-   jalr address + 4), because jalr saves the return address in ra.
+   0x34. The call is "jal 76e <printf>" at address 0x30, and jal saves
+   the address of the next instruction (0x30 + 4 = 0x34, the "li a0,0")
+   in ra.
 
 5. What is the output of:
        unsigned int i = 0x00646c72;
