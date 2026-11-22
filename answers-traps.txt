@@ -1,0 +1,41 @@
+Lab: traps (RISC-V assembly) - answers
+
+1. Which registers contain arguments to functions? Which register holds 13
+   in main's call to printf?
+   Function arguments are passed in registers a0-a7 (a0 is the first
+   argument, a1 the second, and so on). In main, 13 is the third argument
+   to printf, so it is held in register a2.
+
+2. Where is the call to function f? Where is the call to g?
+   There is no call to either function in main. The compiler inlined them
+   and computed f(8)+1 = 12 at compile time, so main just loads the
+   constant 12 into a1 (li a1,12). g was inlined into f, and f into main.
+
+3. At what address is the function printf located?
+   <ADDR>
+
+4. What value is in the register ra just after the jalr to printf in main?
+   <RA> - the address of the instruction right after the jalr (the
+   jalr address + 4), because jalr saves the return address in ra.
+
+5. What is the output of:
+       unsigned int i = 0x00646c72;
+       printf("H%x Wo%s", 57616, (char *) &i);
+   The output is: He110 World
+   57616 in hex is 0xe110, so "H%x" prints "He110". RISC-V is little-endian,
+   so i is stored in memory as the bytes 72 6c 64 00, which are the ASCII
+   characters 'r' 'l' 'd' and the string terminator. "%s" therefore
+   prints "rld", giving "Wo" + "rld" = "World".
+
+6. If RISC-V were big-endian, what would i need to be to yield the same
+   output? Would 57616 need to change?
+   i would need to be 0x726c6400, so that the bytes in memory are still
+   72 6c 64 00 in that order. 57616 would not need to change, because %x
+   formats the integer value, which does not depend on byte order.
+
+7. In printf("x=%d y=%d", 3), what is printed after 'y='? Why?
+   An unpredictable garbage value (not a specific value) is printed.
+   Only one argument (3) is passed after the format string, so printf
+   gets x from register a1. For %d after y= it reads the next argument
+   register, a2, which the caller never set, so it prints whatever value
+   happened to be left in a2.
