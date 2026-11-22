@@ -82,9 +82,19 @@ usertrap(void)
     kexit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if (which_dev == 2)
+  if (which_dev == 2) {
+    // timer interrupt: count ticks for sigalarm
+    if (p->alarm_interval > 0 && !p->alarm_active) {
+      p->alarm_ticks++;
+      if (p->alarm_ticks >= p->alarm_interval) {
+        p->alarm_ticks = 0;
+        p->alarm_tf = *p->trapframe;           // save ALL registers + epc
+        p->trapframe->epc = p->alarm_handler;  // run the handler next
+        p->alarm_active = 1;                   // block re-entry
+      }
+    }
     yield();
-
+  }
   prepare_return();
 
   // the user page table to switch to, for trampoline.S
